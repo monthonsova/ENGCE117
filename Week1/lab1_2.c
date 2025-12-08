@@ -10,7 +10,7 @@ void GetSet(int **receiver, int *countPtr) {
     for (int slot = 0; slot < totalItems; slot++) {
         scanf("%d", &tempBox[slot]);
     }
-
+        
     *receiver = tempBox;
     *countPtr = totalItems;
 }
