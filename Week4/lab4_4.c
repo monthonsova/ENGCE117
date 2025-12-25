@@ -34,9 +34,6 @@ int main() {
 	GoNext1(&now1);
 	printf("%s ", now1->name);
 
-	// The 'start' pointer is now lost, so freeing the list is complex.
-	// For simplicity, it is omitted.
-	
 	return 0;
 }
 
@@ -48,12 +45,9 @@ void SaveNode(struct studentNode *child, char n[], int a, char s, float g) {
 }
 
 void GoNext1(struct studentNode **walk) {
-    // Check if there is a next node to move to
+
     if ((*walk) != NULL && (*walk)->next != NULL) {
-        // Advance the original pointer (now1 in main) to the next node
+        printf("%s ", (*walk)->next->name);
         *walk = (*walk)->next;
-        
-        // Display the name from the new node that the pointer now points to
-        printf("%s ", (*walk)->name);
     }
 }
