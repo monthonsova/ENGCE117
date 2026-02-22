@@ -1,74 +1,72 @@
 #include <iostream>
+#include <memory>
 #include <string>
 
 using namespace std;
 
-struct Student {
-    string name;
-    int age;
-    char sex;
-    float gpa;
-    Student* next;
-
-    Student(const string& n, int a, char s, float g)
-        : name(n), age(a), sex(s), gpa(g), next(nullptr) {}
-};
-
 class LinkedList {
 protected:
-    Student* head;
-    Student* current;
+    struct Node {
+        string name;
+        int age;
+        char sex;
+        float gpa;
+        unique_ptr<Node> next;
+
+        Node(const string& n, int a, char s, float g)
+            : name(n), age(a), sex(s), gpa(g), next(nullptr) {}
+    };
+
+    unique_ptr<Node> head;
+    Node* current = nullptr;
 
 public:
-    LinkedList() : head(nullptr), current(nullptr) {}
+    LinkedList() = default;
 
-    virtual ~LinkedList() {
-        clear();
-    }
+    virtual ~LinkedList() = default;
 
-    void clear() {
-        while (head != nullptr) {
-            Student* temp = head;
-            head = head->next;
-            delete temp;
-        }
-        current = nullptr;
-    }
+    LinkedList(const LinkedList&) = delete;
+    LinkedList& operator=(const LinkedList&) = delete;
+
+    LinkedList(LinkedList&&) noexcept = default;
+    LinkedList& operator=(LinkedList&&) noexcept = default;
 
     void insertFront(const string& name, int age, char sex, float gpa) {
-        Student* newNode = new Student(name, age, sex, gpa);
-        newNode->next = head;
-        head = newNode;
-        current = head;
+        auto newNode = make_unique<Node>(name, age, sex, gpa);
+        newNode->next = move(head);
+        head = move(newNode);
+        current = head.get();
     }
 
     void goNext() {
-        if (current != nullptr)
-            current = current->next;
+        if (current && current->next)
+            current = current->next.get();
+        else
+            current = nullptr;
     }
 
     void deleteCurrent() {
-        if (head == nullptr || current == nullptr)
+        if (!head || !current)
             return;
 
-        if (current == head) {
-            head = head->next;
-            delete current;
-            current = head;
+        if (current == head.get()) {
+            head = move(head->next);
+            current = head.get();
             return;
         }
 
-        Student* prev = head;
-        while (prev->next != current)
-            prev = prev->next;
+        Node* prev = head.get();
+        while (prev && prev->next && prev->next.get() != current)
+            prev = prev->next.get();
 
-        prev->next = current->next;
-        delete current;
-        current = prev->next;
+        if (prev && prev->next) {
+            prev->next = move(prev->next->next);
+            current = prev->next.get();
+        }
     }
 
     virtual void show() const {
-        if (current != nullptr) {
+        if (current) {
             cout << current->name << " "
                  << current->age << " "
                  << current->sex << " "
@@ -80,19 +78,19 @@ public:
 class NameList : public LinkedList {
 public:
     void goFirst() {
-        current = head;
+        current = head.get();
     }
 
     void show() const override {
-        Student* temp = head;
+        Node* temp = head.get();
         bool first = true;
 
-        while (temp != nullptr) {
+        while (temp) {
             if (!first)
                 cout << " ";
             cout << temp->name;
             first = false;
-            temp = temp->next;
+            temp = temp->next.get();
         }
         cout << endl;
     }
