@@ -22,12 +22,10 @@ protected:
 
 public:
     LinkedList() = default;
-
     virtual ~LinkedList() = default;
 
     LinkedList(const LinkedList&) = delete;
     LinkedList& operator=(const LinkedList&) = delete;
-
     LinkedList(LinkedList&&) noexcept = default;
     LinkedList& operator=(LinkedList&&) noexcept = default;
 
@@ -39,38 +37,33 @@ public:
     }
 
     void goNext() {
-        if (current && current->next)
+        if (current) {
             current = current->next.get();
-        else
-            current = nullptr;
+        }
     }
 
     void deleteCurrent() {
-        if (!head || !current)
-            return;
+        if (!head || !current) return;
 
         if (current == head.get()) {
             head = move(head->next);
             current = head.get();
-            return;
-        }
-
-        Node* prev = head.get();
-        while (prev && prev->next && prev->next.get() != current)
-            prev = prev->next.get();
-
-        if (prev && prev->next) {
-            prev->next = move(prev->next->next);
-            current = prev->next.get();
+        } else {
+            Node* prev = head.get();
+            while (prev && prev->next.get() != current) {
+                prev = prev->next.get();
+            }
+            if (prev) {
+                prev->next = move(current->next);
+                current = prev->next.get();
+            }
         }
     }
 
     virtual void show() const {
         if (current) {
-            cout << current->name << " "
-                 << current->age << " "
-                 << current->sex << " "
-                 << current->gpa << endl;
+            cout << current->name << " " << current->age << " " 
+                 << current->sex << " " << current->gpa << endl;
         }
     }
 };
@@ -82,14 +75,11 @@ public:
     }
 
     void show() const override {
+        if (!head) return;
+        
         Node* temp = head.get();
-        bool first = true;
-
         while (temp) {
-            if (!first)
-                cout << " ";
-            cout << temp->name;
-            first = false;
+            cout << temp->name << (temp->next ? " " : "");
             temp = temp->next.get();
         }
         cout << endl;
