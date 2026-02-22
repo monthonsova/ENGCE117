@@ -1,104 +1,129 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <iostream>
+#include <string>
 
-struct studentNode {
-	char name[ 20 ] ;
-	int age ;
-	char sex ;
-	float gpa ;
-	struct studentNode *next ;
-} ;
+using namespace std;
+
+struct Student {
+    string name;
+    int age;
+    char sex;
+    float gpa;
+    Student* next;
+
+    Student(const string& n, int a, char s, float g)
+        : name(n), age(a), sex(s), gpa(g), next(nullptr) {}
+};
 
 class LinkedList {
-	protected :
-		struct studentNode *start, **now ;
-	public :
-		LinkedList() {
-			start = NULL ;
-			now = &start ;
-		}
-		~LinkedList() {
-			struct studentNode *temp ;
-			while( start != NULL ) {
-				temp = start ;
-				start = start->next ;
-				delete temp ;
-			}
-		}
-		void InsNode( char n[], int a, char s, float g ) {
-			struct studentNode *newNode = new struct studentNode ;
-			strcpy( newNode->name, n ) ;
-			newNode->age = a ;
-			newNode->sex = s ;
-			newNode->gpa = g ;
-			newNode->next = *now ;
-			*now = newNode ;
-		}
-		void DelNode() {
-			if( *now == NULL ) return ;
-			struct studentNode *temp = *now ;
-			*now = (*now)->next ;
-			if( temp == start ) {
-				start = *now ;
-			}
-			delete temp ;
-		}
-		void GoNext() {
-			if( *now != NULL && (*now)->next != NULL ) {
-				now = &((*now)->next) ;
-			}
-		}
-		virtual void ShowNode() {
-			if( *now != NULL ) {
-				printf( "%s %d %c %.2f\n", (*now)->name, (*now)->age, (*now)->sex, (*now)->gpa ) ;
-			}
-		}
-} ;
+protected:
+    Student* head;
+    Student* current;
 
-class NewList : public LinkedList {
-	public :
-		void GoFirst() {
-			now = &start ;
-		}
-		virtual void ShowNode() {
-			struct studentNode *temp = start ;
-			bool first = true ;
-			while( temp != NULL ) {
-				if( !first ) printf( " " ) ;
-				printf( "%s", temp->name ) ;
-				temp = temp->next ;
-				first = false ;
-			}
-			printf( "\n" ) ;
-		}
-} ;
+public:
+    LinkedList() : head(nullptr), current(nullptr) {}
+
+    virtual ~LinkedList() {
+        clear();
+    }
+
+    void clear() {
+        while (head != nullptr) {
+            Student* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        current = nullptr;
+    }
+
+    void insertFront(const string& name, int age, char sex, float gpa) {
+        Student* newNode = new Student(name, age, sex, gpa);
+        newNode->next = head;
+        head = newNode;
+        current = head;
+    }
+
+    void goNext() {
+        if (current != nullptr)
+            current = current->next;
+    }
+
+    void deleteCurrent() {
+        if (head == nullptr || current == nullptr)
+            return;
+
+        if (current == head) {
+            head = head->next;
+            delete current;
+            current = head;
+            return;
+        }
+
+        Student* prev = head;
+        while (prev->next != current)
+            prev = prev->next;
+
+        prev->next = current->next;
+        delete current;
+        current = prev->next;
+    }
+
+    virtual void show() const {
+        if (current != nullptr) {
+            cout << current->name << " "
+                 << current->age << " "
+                 << current->sex << " "
+                 << current->gpa << endl;
+        }
+    }
+};
+
+class NameList : public LinkedList {
+public:
+    void goFirst() {
+        current = head;
+    }
+
+    void show() const override {
+        Student* temp = head;
+        bool first = true;
+
+        while (temp != nullptr) {
+            if (!first)
+                cout << " ";
+            cout << temp->name;
+            first = false;
+            temp = temp->next;
+        }
+        cout << endl;
+    }
+};
 
 int main() {
-	LinkedList listA ;
-	NewList listB ;
-	LinkedList *listC ;
+    LinkedList listA;
+    NameList listB;
+    LinkedList* listC;
 
-	listA.InsNode( "one", 1, 'A', 1.1 ) ;
-	listA.InsNode( "two", 2, 'B', 2.2 ) ;
-	listA.InsNode( "three", 3, 'C', 3.3 ) ;
-	listA.GoNext() ;
-	listA.ShowNode() ;
+    listA.insertFront("one", 1, 'A', 1.1f);
+    listA.insertFront("two", 2, 'B', 2.2f);
+    listA.insertFront("three", 3, 'C', 3.3f);
 
-	listB.InsNode( "four", 4, 'D', 4.4 ) ;
-	listB.InsNode( "five", 5, 'E', 5.5 ) ;
-	listB.InsNode( "six", 6, 'F', 6.6 ) ;
-	listB.GoNext() ;
-	listB.DelNode() ;
-	listB.ShowNode() ;
+    listA.goNext();
+    listA.show();
 
-	listC = &listA;
-	listC->GoNext() ;
-	listC->ShowNode() ;
+    listB.insertFront("four", 4, 'D', 4.4f);
+    listB.insertFront("five", 5, 'E', 5.5f);
+    listB.insertFront("six", 6, 'F', 6.6f);
 
-	listC = &listB ;
-	listC->ShowNode() ;
+    listB.goNext();
+    listB.deleteCurrent();
+    listB.show();
 
-	return 0 ;
+    listC = &listA;
+    listC->goNext();
+    listC->show();
+
+    listC = &listB;
+    listC->show();
+
+    return 0;
 }
-

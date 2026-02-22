@@ -1,173 +1,249 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-struct studentNode {
-    char name[ 20 ] ;
-    int age ;
-    char sex ;
-    float gpa ;
-    struct studentNode *next ;
-} ;
+#define MAX_NAME 20
+#define FILENAME "student.txt"
 
-class LinkedList {
-    protected :
-        struct studentNode *start, **now ;
-    public :
-        LinkedList() {
-            start = NULL ;
-            now = &start ;
-        }
-        ~LinkedList() {
-            struct studentNode *temp ;
-            while( start != NULL ) {
-                temp = start ;
-                start = start->next ;
-                delete temp ;
-            }
-        }
-        void InsNode( char n[], int a, char s, float g ) {
-            struct studentNode *newNode = new struct studentNode ;
-            strcpy( newNode->name, n ) ;
-            newNode->age = a ;
-            newNode->sex = s ;
-            newNode->gpa = g ;
-            newNode->next = *now ;
-            *now = newNode ;
-        }
-        void DelNode() {
-            if( *now == NULL ) return ;
-            struct studentNode *temp = *now ;
-            *now = (*now)->next ;
-            delete temp ;
-        }
-        void GoNext() {
-            if( *now != NULL ) {
-                now = &((*now)->next) ;
-            }
-        }
-        void GoFirst() {
-            now = &start ;
-        }
-        void GoLast() {
-            GoFirst() ;
-            while( *now != NULL ) {
-                now = &((*now)->next) ;
-            }
-        }
-        void ShowAll() {
-            struct studentNode *temp = start ;
-            while( temp != NULL ) {
-                printf( "%s %d %c %.2f\n", temp->name, temp->age, temp->sex, temp->gpa ) ;
-                temp = temp->next ;
-            }
-        }
-        int FindNode( char n[] ) {
-            GoFirst() ;
-            while( *now != NULL ) {
-                if( strcmp( (*now)->name, n ) == 0 ) return 1 ;
-                GoNext() ;
-            }
-            return 0 ;
-        }
-        struct studentNode *NowNode() {
-            return *now ;
-        }
-        void EditNode( char n[], int a, char s, float g ) {
-            if( *now != NULL ) {
-                strcpy( (*now)->name, n ) ;
-                (*now)->age = a ;
-                (*now)->sex = s ;
-                (*now)->gpa = g ;
-            }
-        }
-} ;
+typedef struct Student {
+    char name[MAX_NAME];
+    int age;
+    char sex;
+    float gpa;
+    struct Student* next;
+} Student;
 
-void AddData( LinkedList *ll ) {
-    char n[20], s ;
-    int a ;
-    float g ;
-    printf( "   Enter Name Age Sex GPA: " ) ;
-    scanf( "%s %d %c %f", n, &a, &s, &g ) ;
-    ll->GoLast() ;
-    ll->InsNode( n, a, s, g ) ;
+/* ================= Linked List Functions ================= */
+
+Student* createNode(const char* name, int age, char sex, float gpa) {
+    Student* newNode = (Student*)malloc(sizeof(Student));
+    if (newNode == NULL) {
+        printf("Memory allocation failed.\n");
+        exit(1);
+    }
+
+    strncpy(newNode->name, name, MAX_NAME - 1);
+    newNode->name[MAX_NAME - 1] = '\0';
+    newNode->age = age;
+    newNode->sex = sex;
+    newNode->gpa = gpa;
+    newNode->next = NULL;
+
+    return newNode;
 }
 
-void EditData( LinkedList *ll ) {
-    char n[20], s ;
-    int a ;
-    float g ;
-    printf( "   Enter name to edit: " ) ;
-    scanf( "%s", n ) ;
-    if( ll->FindNode( n ) ) {
-        printf( "   Enter New Data (Name Age Sex GPA): " ) ;
-        scanf( "%s %d %c %f", n, &a, &s, &g ) ;
-        ll->EditNode( n, a, s, g ) ;
-    } else {
-        printf( "   Name not found.\n" ) ;
+void addStudent(Student** head, const char* name, int age, char sex, float gpa) {
+    Student* newNode = createNode(name, age, sex, gpa);
+
+    if (*head == NULL) {
+        *head = newNode;
+        return;
+    }
+
+    Student* temp = *head;
+    while (temp->next != NULL)
+        temp = temp->next;
+
+    temp->next = newNode;
+}
+
+Student* findStudent(Student* head, const char* name) {
+    while (head != NULL) {
+        if (strcmp(head->name, name) == 0)
+            return head;
+        head = head->next;
+    }
+    return NULL;
+}
+
+int deleteStudent(Student** head, const char* name) {
+    if (*head == NULL)
+        return 0;
+
+    Student* temp = *head;
+    Student* prev = NULL;
+
+    while (temp != NULL) {
+        if (strcmp(temp->name, name) == 0) {
+            if (prev == NULL)
+                *head = temp->next;
+            else
+                prev->next = temp->next;
+
+            free(temp);
+            return 1;
+        }
+        prev = temp;
+        temp = temp->next;
+    }
+    return 0;
+}
+
+int editStudent(Student* head, const char* name, int age, char sex, float gpa) {
+    Student* target = findStudent(head, name);
+    if (target == NULL)
+        return 0;
+
+    target->age = age;
+    target->sex = sex;
+    target->gpa = gpa;
+    return 1;
+}
+
+void showAll(Student* head) {
+    if (head == NULL) {
+        printf("No data available.\n");
+        return;
+    }
+
+    while (head != NULL) {
+        printf("%-15s %3d %c %.2f\n",
+               head->name,
+               head->age,
+               head->sex,
+               head->gpa);
+        head = head->next;
     }
 }
 
-void FindData( LinkedList *ll ) {
-    char n[20] ;
-    printf( "   Enter name to find: " ) ;
-    scanf( "%s", n ) ;
-    if( ll->FindNode( n ) ) {
-        struct studentNode *temp = ll->NowNode() ;
-        printf( "   Found: %s %d %c %.2f\n", temp->name, temp->age, temp->sex, temp->gpa ) ;
-    } else {
-        printf( "   Not found.\n" ) ;
+void freeList(Student* head) {
+    Student* temp;
+    while (head != NULL) {
+        temp = head;
+        head = head->next;
+        free(temp);
     }
 }
 
-void readfile( LinkedList *ll ) {
-    FILE *fp = fopen( "student.txt", "r" ) ;
-    if( fp == NULL ) return ;
-    char n[20], s ;
-    int a ;
-    float g ;
-    while( fscanf( fp, "%s %d %c %f", n, &a, &s, &g ) != EOF ) {
-        ll->GoLast() ;
-        ll->InsNode( n, a, s, g ) ;
+/* ================= File Functions ================= */
+
+void loadFromFile(Student** head) {
+    FILE* fp = fopen(FILENAME, "r");
+    if (fp == NULL)
+        return;
+
+    char name[MAX_NAME];
+    int age;
+    char sex;
+    float gpa;
+
+    while (fscanf(fp, "%19s %d %c %f", name, &age, &sex, &gpa) == 4) {
+        addStudent(head, name, age, sex, gpa);
     }
-    fclose( fp ) ;
+
+    fclose(fp);
 }
 
-void writefile( LinkedList *ll ) {
-    FILE *fp = fopen( "student.txt", "w" ) ;
-    if( fp == NULL ) return ;
-    ll->GoFirst() ;
-    struct studentNode *temp ;
-    while( ( temp = ll->NowNode() ) != NULL ) {
-        fprintf( fp, "%s %d %c %.2f\r\n", temp->name, temp->age, temp->sex, temp->gpa ) ;
-        ll->GoNext() ;
+void saveToFile(Student* head) {
+    FILE* fp = fopen(FILENAME, "w");
+    if (fp == NULL) {
+        printf("Cannot open file for writing.\n");
+        return;
     }
-    fclose( fp ) ;
+
+    while (head != NULL) {
+        fprintf(fp, "%s %d %c %.2f\n",
+                head->name,
+                head->age,
+                head->sex,
+                head->gpa);
+        head = head->next;
+    }
+
+    fclose(fp);
+}
+
+/* ================= Menu ================= */
+
+void displayMenu() {
+    printf("\n===== MENU =====\n");
+    printf("1. Add\n");
+    printf("2. Edit\n");
+    printf("3. Delete\n");
+    printf("4. Find\n");
+    printf("5. Show All\n");
+    printf("0. Exit\n");
+    printf("Select: ");
 }
 
 int main() {
-    LinkedList listA ;
-    int menu ;
-    readfile( &listA ) ;
-    printf( "  Menu - (1) Add (2) Edit (3) Delete (4) Find (5) Show (0) Exit : " ) ;
-    scanf( "%d", &menu ) ;
-    while( menu != 0 ) {
-        switch( menu ) {
-            case 1 : AddData( &listA ) ; break ;
-            case 2 : EditData( &listA ) ; break ;
-            case 3 : {
-                char n[20] ;
-                printf( "   Enter name to delete: " ) ;
-                scanf( "%s", n ) ;
-                if( listA.FindNode( n ) ) listA.DelNode() ;
-                break ;
-            }
-            case 4 : FindData( &listA ) ; break ;
-            case 5 : listA.ShowAll() ; break ;
+    Student* head = NULL;
+    int choice;
+
+    loadFromFile(&head);
+
+    do {
+        displayMenu();
+
+        if (scanf("%d", &choice) != 1) {
+            while (getchar() != '\n');
+            printf("Invalid input.\n");
+            continue;
         }
-        printf( "  Menu - (1) Add (2) Edit (3) Delete (4) Find (5) Show (0) Exit : " ) ;
-        scanf( "%d", &menu ) ;
-    }
-    writefile( &listA ) ;
-    return 0 ;
+
+        char name[MAX_NAME];
+        int age;
+        char sex;
+        float gpa;
+
+        switch (choice) {
+            case 1:
+                printf("Enter Name Age Sex GPA: ");
+                scanf("%19s %d %c %f", name, &age, &sex, &gpa);
+                addStudent(&head, name, age, sex, gpa);
+                printf("Added successfully.\n");
+                break;
+
+            case 2:
+                printf("Enter name to edit: ");
+                scanf("%19s", name);
+                if (findStudent(head, name)) {
+                    printf("Enter new Age Sex GPA: ");
+                    scanf("%d %c %f", &age, &sex, &gpa);
+                    editStudent(head, name, age, sex, gpa);
+                    printf("Updated successfully.\n");
+                } else {
+                    printf("Name not found.\n");
+                }
+                break;
+
+            case 3:
+                printf("Enter name to delete: ");
+                scanf("%19s", name);
+                if (deleteStudent(&head, name))
+                    printf("Deleted successfully.\n");
+                else
+                    printf("Name not found.\n");
+                break;
+
+            case 4:
+                printf("Enter name to find: ");
+                scanf("%19s", name);
+                {
+                    Student* s = findStudent(head, name);
+                    if (s != NULL)
+                        printf("Found: %s %d %c %.2f\n",
+                               s->name, s->age, s->sex, s->gpa);
+                    else
+                        printf("Not found.\n");
+                }
+                break;
+
+            case 5:
+                showAll(head);
+                break;
+
+            case 0:
+                saveToFile(head);
+                printf("Data saved. Exiting...\n");
+                break;
+
+            default:
+                printf("Invalid choice.\n");
+        }
+
+    } while (choice != 0);
+
+    freeList(head);
+    return 0;
 }
