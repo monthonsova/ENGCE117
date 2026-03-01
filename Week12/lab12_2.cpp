@@ -1,20 +1,15 @@
 #include <stdio.h>
 
-// ประกาศฟังก์ชันสำหรับแก้อัลกอริทึม Knapsack แบบ Greedy
 int *KnapsackGreedy(int *w, int *v, int n, int wx);
 
 int main() {
-    // กำหนดจำนวนสิ่งของ (n) และความจุกระเป๋าสูงสุด (wx)
     int n = 5, wx = 11;
     
-    // กำหนดน้ำหนัก (w) และมูลค่า (v) ของสิ่งของแต่ละชิ้น
     int w[5] = { 1, 2, 5, 6, 7 };
     int v[5] = { 1, 6, 18, 22, 28 };
     
-    // เรียกใช้ฟังก์ชันแล้วเก็บผลลัพธ์ว่าเลือกชิ้นไหนบ้าง
     int *x = KnapsackGreedy(w, v, n, wx);
     
-    // แสดงผลลัพธ์การเลือก (1 = เลือกใส่กระเป๋า, 0 = ไม่เลือก)
     for(int i = 0; i < n; i++) {
         printf("%d ", x[i]);
     }
@@ -22,29 +17,24 @@ int main() {
     return 0;
 }
 
-// ฟังก์ชันหลักที่ใช้คำนวณการเลือกของใส่กระเป๋าให้คุ้มที่สุด
 int *KnapsackGreedy(int *w, int *v, int n, int wx) {
-    int *x = new int[n];          // อาเรย์เก็บสถานะการเลือกของ (ผลลัพธ์)
-    float *ratio = new float[n];  // อาเรย์เก็บสัดส่วน มูลค่า/น้ำหนัก (ความคุ้มค่า)
-    int *index = new int[n];      // อาเรย์เก็บดัชนีเดิมของสิ่งของ เพื่อให้รู้ว่าชิ้นไหนเป็นชิ้นไหน
+    int *x = new int[n];
+    float *ratio = new float[n];
+    int *index = new int[n];
     
-    // คำนวณความคุ้มค่าของสิ่งของแต่ละชิ้นและตั้งค่าเริ่มต้น
     for (int i = 0; i < n; i++) {
-        x[i] = 0; // เริ่มต้นให้ยังไม่เลือกสิ่งของใดๆ
-        ratio[i] = (float)v[i] / w[i]; // หาความคุ้มค่า (ยิ่งมากยิ่งดี)
-        index[i] = i; // บันทึกตำแหน่งเดิมของสิ่งของไว้
+        x[i] = 0;
+        ratio[i] = (float)v[i] / w[i];
+        index[i] = i;
     }
     
-    // เรียงลำดับสิ่งของตามความคุ้มค่าจาก "มากไปน้อย"
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
             if (ratio[i] < ratio[j]) {
-                // สลับค่าความคุ้มค่า
                 float tempRatio = ratio[i];
                 ratio[i] = ratio[j];
                 ratio[j] = tempRatio;
                 
-                // สลับตำแหน่งดัชนีตามไปด้วย เพื่อไม่ให้ข้อมูลผิดเพี้ยน
                 int tempIndex = index[i];
                 index[i] = index[j];
                 index[j] = tempIndex;
@@ -52,19 +42,16 @@ int *KnapsackGreedy(int *w, int *v, int n, int wx) {
         }
     }
     
-    int currentWeight = 0; // ตัวแปรเก็บน้ำหนักสะสมในกระเป๋า
+    int currentWeight = 0;
     
-    // วนลูปพิจารณาหยิบของใส่กระเป๋าตามลำดับความคุ้มค่า
     for (int i = 0; i < n; i++) {
-        int idx = index[i]; // ดึงดัชนีเดิมของสิ่งของชิ้นที่คุ้มที่สุดในรอบนั้นมา
+        int idx = index[i];
         
-        // ถ้าน้ำหนักรวมกับของชิ้นนี้แล้วยังไม่เกินความจุกระเป๋า
         if (currentWeight + w[idx] <= wx) {
-            x[idx] = 1; // เลือกสิ่งของชิ้นนี้ (เปลี่ยนสถานะเป็น 1)
-            currentWeight += w[idx]; // บวกน้ำหนักสะสมเพิ่มเข้าไป
+            x[idx] = 1;
+            currentWeight += w[idx];
         }
     }
     
-    // ส่งคืนอาเรย์ผลลัพธ์
     return x;
 }

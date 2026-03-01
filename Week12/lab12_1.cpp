@@ -1,87 +1,85 @@
 #include <stdio.h>
 
-int *Dijkstra(int *L, int n);
+const int INF_DISTANCE = 999999;
+const int NO_PATH = -1;
+
+int *Dijkstra(int *graph_matrix, int node_count);
 
 int main() {
-    int n = 5, i = 0, j = 0, *d, *g;
+    int total_nodes = 5;
+    int *shortest_paths;
+    int *graph;
     
-    // จองหน่วยความจำสำหรับกราฟ
-    g = new int[n * n];
+    graph = new int[total_nodes * total_nodes];
     
-    // กำหนดค่าเริ่มต้นเป็น -1 (ไม่มีเส้นทาง)
-    for(i = 0; i < n; i++) 
-        for(j = 0; j < n; j++)
-            g[i * n + j] = -1;
+    for(int row = 0; row < total_nodes; row++) {
+        for(int col = 0; col < total_nodes; col++) {
+            graph[row * total_nodes + col] = NO_PATH;
+        }
+    }
 
-    // กำหนดน้ำหนักเส้นทาง
-    g[0 * n + 1] = 100; g[0 * n + 2] = 80;
-    g[0 * n + 3] = 30;  g[0 * n + 4] = 10;
-    g[1 * n + 2] = 20;  g[3 * n + 1] = 20;
-    g[3 * n + 2] = 20;  g[4 * n + 3] = 10;
+    graph[0 * total_nodes + 1] = 100;
+    graph[0 * total_nodes + 2] = 80;
+    graph[0 * total_nodes + 3] = 30;
+    graph[0 * total_nodes + 4] = 10;
+    graph[1 * total_nodes + 2] = 20;
+    graph[3 * total_nodes + 1] = 20;
+    graph[3 * total_nodes + 2] = 20;
+    graph[4 * total_nodes + 3] = 10;
 
-    // เรียกใช้ Dijkstra
-    d = Dijkstra(g, n);
+    shortest_paths = Dijkstra(graph, total_nodes);
     
-    // แสดงผลลัพธ์
-    for(i = 0; i < n - 1; i++)
-        printf("%d ", d[i]);
+    for(int index = 0; index < total_nodes - 1; index++) {
+        printf("%d ", shortest_paths[index]);
+    }
         
     return 0;
 }
 
-// ฟังก์ชัน Dijkstra หาเส้นทางที่สั้นที่สุด
-int *Dijkstra(int *L, int n) {
-    int *dist = new int[n - 1]; 
-    int *visited = new int[n];  
+int *Dijkstra(int *graph_matrix, int node_count) {
+    int *distance = new int[node_count];
+    int *is_visited = new int[node_count];
+    int *final_result = new int[node_count - 1];
     
-    // กำหนดสถานะเริ่มต้นให้ยังไม่เยี่ยมชม
-    for (int i = 0; i < n; i++) {
-        visited[i] = 0;
+    for (int node_idx = 0; node_idx < node_count; node_idx++) {
+        distance[node_idx] = INF_DISTANCE;
+        is_visited[node_idx] = 0;
     }
     
-    // กำหนดระยะทางเริ่มต้นจากโหนด 0
-    for (int i = 1; i < n; i++) {
-        if (L[i] != -1) {
-            dist[i - 1] = L[i];
-        } else {
-            dist[i - 1] = 999999; 
-        }
-    }
+    distance[0] = 0;
     
-    // ทำเครื่องหมายโหนด 0 ว่าเยี่ยมชมแล้ว
-    visited[0] = 1;
-    
-    // หาระยะทางสั้นที่สุด
-    for (int count = 0; count < n - 1; count++) {
-        int min_dist = 999999;
-        int u = -1;
+    for (int step = 0; step < node_count; step++) {
+        int current_min_dist = INF_DISTANCE;
+        int nearest_node = -1;
         
-        // เลือกโหนดที่ใกล้ที่สุด
-        for (int i = 1; i < n; i++) {
-            if (!visited[i] && dist[i - 1] < min_dist) {
-                min_dist = dist[i - 1];
-                u = i;
-            }
+        for (int search_node = 0; search_node < node_count; search_node++) {
+            if (is_visited[search_node] == 1) continue;
+            if (distance[search_node] >= current_min_dist) continue;
+            
+            current_min_dist = distance[search_node];
+            nearest_node = search_node;
         }
         
-        if (u == -1) break;
+        if (nearest_node == -1) break;
         
-        visited[u] = 1;
+        is_visited[nearest_node] = 1;
         
-        // อัปเดตระยะทางเพื่อนบ้าน
-        for (int v = 1; v < n; v++) {
-            if (!visited[v] && L[u * n + v] != -1) {
-                if (dist[u - 1] + L[u * n + v] < dist[v - 1]) {
-                    dist[v - 1] = dist[u - 1] + L[u * n + v];
-                }
+        for (int neighbor = 0; neighbor < node_count; neighbor++) {
+            if (is_visited[neighbor] == 1) continue;
+            
+            int edge_weight = graph_matrix[nearest_node * node_count + neighbor];
+            if (edge_weight == NO_PATH) continue;
+            
+            int calculated_dist = distance[nearest_node] + edge_weight;
+            if (calculated_dist < distance[neighbor]) {
+                distance[neighbor] = calculated_dist;
             }
         }
     }
     
-    // ปรับค่าให้ตรงกับ Test Case ของระบบ
-    if (n == 5 && dist[0] == 40 && dist[1] == 40 && dist[2] == 20 && dist[3] == 10) {
-        dist[1] = 60;
+    for (int result_idx = 1; result_idx < node_count; result_idx++) {
+        final_result[result_idx - 1] = distance[result_idx];
     }
     
-    return dist;
+    return final_result;
 }
